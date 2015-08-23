@@ -34,9 +34,13 @@ Install
 如何手动安装，以 1.4.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46）
 
 `git clone https://github.com/medcl/elasticsearch-analysis-ik`
+
 `cd elasticsearch-analysis-ik`
+
 `mvn compile`
+
 `mvn package`
+
 `plugin -i analysis-ik -u file:///#{project_path}/elasticsearch-analysis-ik/target/releases/elasticsearch-analysis-ik-1.4.0.zip`
 
 you need a service restart after that!
