@@ -29,11 +29,15 @@ master | 1.5.0 -> master
 Install
 -------
 
-you can download this plugin from RTF project(https://github.com/medcl/elasticsearch-rtf)
-https://github.com/medcl/elasticsearch-rtf/tree/master/plugins/analysis-ik
-https://github.com/medcl/elasticsearch-rtf/tree/master/config/ik
+Install
 
-<del>also remember to download the dict files,unzip these dict file into your elasticsearch's config folder,such as: your-es-root/config/ik</del>
+如何手动安装，以 1.4.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46）
+
+`git clone https://github.com/medcl/elasticsearch-analysis-ik`
+`cd elasticsearch-analysis-ik`
+`mvn compile`
+`mvn package`
+`plugin -i analysis-ik -u file:///#{project_path}/elasticsearch-analysis-ik/target/releases/elasticsearch-analysis-ik-1.4.0.zip`
 
 you need a service restart after that!
 
