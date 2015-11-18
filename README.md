@@ -3,16 +3,16 @@ IK Analysis for ElasticSearch
 
 The IK Analysis plugin integrates Lucene IK analyzer into elasticsearch, support customized dictionary.
 
-Tokenizer: `ik`
-
-更新：对于使用 ES 集群，用 IK 作为分词插件，经常会修改自定义词典的使用者，可以透过远程加载的方式，每次更新都会重新加载词典，不必重启 ES 服务。
+Analyzer: `ik_smart` , `ik_max_word` , Tokenizer: `ik_smart` , `ik_max_word` 
 
 Versions
 --------
 
 IK version | ES version
 -----------|-----------
-master | 1.5.0 -> master
+master | 2.0.0 -> master
+1.5.0 | 2.0.0
+1.4.1 | 1.7.2
 1.4.0 | 1.6.0
 1.3.0 | 1.5.0
 1.2.9 | 1.4.0
@@ -29,7 +29,8 @@ master | 1.5.0 -> master
 Install
 -------
 
-Install
+Install (old)
+-------
 
 如何手动安装，以 1.4.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46）
 
@@ -119,26 +120,45 @@ Cache-Control: no-cache
 index.analysis.analyzer.default.type : "ik"
 ```
 
+Install (new)
+--------
 
-### Mapping Configuration
+1.compile
+
+`mvn package`
+
+copy and unzip `target/release/ik**.zip` to `your-es-root/plugins/ik`
+
+2.config files:
+
+download the dict files,unzip these dict file into your elasticsearch's config folder,such as: `your-es-root/config/ik`
+
+3.restart elasticsearch
+
+Tips:
+
+ik_max_word: 会将文本做最细粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,中华人民,中华,华人,人民共和国,人民,人,民,共和国,共和,和,国国,国歌”，会穷尽各种可能的组合；
+
+ik_smart: 会做最粗粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,国歌”。
+
 
 #### Quick Example
 
-1. create a index
+1.create a index
 
 ```bash
 curl -XPUT http://localhost:9200/index
 ```
 
-2. create a mapping
+2.create a mapping
 
 ```bash
 curl -XPOST http://localhost:9200/index/fulltext/_mapping -d'
 {
     "fulltext": {
              "_all": {
-            "indexAnalyzer": "ik",
-            "searchAnalyzer": "ik",
+            "analyzer": "ik_max_word",
+            "search_analyzer": "ik_max_word",
             "term_vector": "no",
             "store": "false"
         },
@@ -147,8 +167,8 @@ curl -XPOST http://localhost:9200/index/fulltext/_mapping -d'
                 "type": "string",
                 "store": "no",
                 "term_vector": "with_positions_offsets",
-                "indexAnalyzer": "ik",
-                "searchAnalyzer": "ik",
+                "analyzer": "ik_max_word",
+                "search_analyzer": "ik_max_word",
                 "include_in_all": "true",
                 "boost": 8
             }
@@ -157,7 +177,7 @@ curl -XPOST http://localhost:9200/index/fulltext/_mapping -d'
 }'
 ```
 
-3. index some docs
+3.index some docs
 
 ```bash
 curl -XPOST http://localhost:9200/index/fulltext/1 -d'
@@ -183,7 +203,7 @@ curl -XPOST http://localhost:9200/index/fulltext/4 -d'
 '
 ```
 
-4. query with highlighting
+4.query with highlighting
 
 ```bash
 curl -XPOST http://localhost:9200/index/fulltext/_search  -d'
@@ -200,7 +220,7 @@ curl -XPOST http://localhost:9200/index/fulltext/_search  -d'
 '
 ```
 
-#### Result
+Result
 
 ```json
 {
@@ -256,15 +276,15 @@ curl -XPOST http://localhost:9200/index/fulltext/_search  -d'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <comment>IK Analyzer 扩展配置</comment>
-    <!--用户可以在这里配置自己的扩展字典 -->
-    <entry key="ext_dict">custom/mydict.dic;custom/single_word_low_freq.dic</entry>
-     <!--用户可以在这里配置自己的扩展停止词字典-->
-    <entry key="ext_stopwords">custom/ext_stopword.dic</entry>
-    <!--用户可以在这里配置远程扩展字典 -->
-    <entry key="remote_ext_dict">location</entry>
-    <!--用户可以在这里配置远程扩展停止词字典-->
-    <entry key="remote_ext_stopwords">location</entry>
+	<comment>IK Analyzer 扩展配置</comment>
+	<!--用户可以在这里配置自己的扩展字典 -->
+	<entry key="ext_dict">custom/mydict.dic;custom/single_word_low_freq.dic</entry>
+	 <!--用户可以在这里配置自己的扩展停止词字典-->
+	<entry key="ext_stopwords">custom/ext_stopword.dic</entry>
+ 	<!--用户可以在这里配置远程扩展字典 -->
+	<entry key="remote_ext_dict">location</entry>
+ 	<!--用户可以在这里配置远程扩展停止词字典-->
+	<entry key="remote_ext_stopwords">http://xxx.com/xxx.dic</entry>
 </properties>
 ```
 
@@ -298,7 +318,7 @@ have fun.
 
 请确保你的扩展词典的文本格式为 UTF8 编码
 
-2.如何手动安装，以 1.3.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46）
+2.如何手动安装，以 1.3.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46 ）
 
 
 ```bash
@@ -306,7 +326,7 @@ git clone https://github.com/medcl/elasticsearch-analysis-ik
 cd elasticsearch-analysis-ik
 mvn compile
 mvn package
-plugin --install analysis-ik --url file:///#{project_path}/elasticsearch-analysis-ik/target/releases/elasticsearch-analysis-ik-1.3.0.zip
+copy file  #{project_path}/elasticsearch-analysis-ik/target/releases/elasticsearch-analysis-ik-xxx-jar-with-dependencies.jar to your elasticsearch's folder: plugins/ik
 ```
 
 Thanks
