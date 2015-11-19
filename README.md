@@ -29,100 +29,6 @@ master | 2.0.0 -> master
 Install
 -------
 
-Install (old)
--------
-
-如何手动安装，以 1.4.0 為例？（参考：https://github.com/medcl/elasticsearch-analysis-ik/issues/46）
-
-`git clone https://github.com/medcl/elasticsearch-analysis-ik`
-
-`cd elasticsearch-analysis-ik`
-
-`mvn compile`
-
-`mvn package`
-
-`plugin -i analysis-ik -u file:///#{project_path}/elasticsearch-analysis-ik/target/releases/elasticsearch-analysis-ik-1.4.0.zip`
-
-you need a service restart after that!
-
-Configuration
--------------
-
-### Analysis Configuration
-
-#### `elasticsearch.yml`
-
-```yaml
-index:
-  analysis:
-    analyzer:
-      ik:
-          alias: [ik_analyzer]
-          type: org.elasticsearch.index.analysis.IkAnalyzerProvider
-      ik_max_word:
-          type: ik
-          use_smart: false
-      ik_smart:
-          type: ik
-          use_smart: true
-```
-
-Or
-
-```yaml
-index.analysis.analyzer.ik.type : "ik"
-```
-
-#### 以上两种配置方式的区别：
-
-1、第二种方式，只定义了一个名为 ik 的 analyzer，其 use_smart 采用默认值 false
-
-2、第一种方式，定义了三个 analyzer，分别为：ik、ik_max_word、ik_smart，其中 ik_max_word 和 ik_smart 是基于 ik 这个 analyzer 定义的，并各自明确设置了 use_smart 的不同值。
-
-3、其实，ik_max_word 等同于 ik。ik_max_word 会将文本做最细粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,中华人民,中华,华人,人民共和国,人民,人,民,共和国,共和,和,国国,国歌”，会穷尽各种可能的组合；而 ik_smart 会做最粗粒度的拆分，比如会将“中华人民共和国国歌”拆分为“中华人民共和国,国歌”。
-
-因此，建议，在设置 mapping 时，用 ik 这个 analyzer，以尽可能地被搜索条件匹配到。
-
-不过，如果你想将 /index_name/_analyze 这个 RESTful API 做为分词器用，用来提取某段文字中的主题词，则建议使用 ik_smart 这个 analyzer：
-
-```
-POST /hailiang/_analyze?analyzer=ik_smart HTTP/1.1
-Host: localhost:9200
-Cache-Control: no-cache
-
-中华人民共和国国歌
-```
-
-返回值：
-
-```json
-{
-  "tokens" : [ {
-    "token" : "中华人民共和国",
-    "start_offset" : 0,
-    "end_offset" : 7,
-    "type" : "CN_WORD",
-    "position" : 1
-  }, {
-    "token" : "国歌",
-    "start_offset" : 7,
-    "end_offset" : 9,
-    "type" : "CN_WORD",
-    "position" : 2
-  } ]
-}
-```
-
-另外，可以在 elasticsearch.yml 里加上如下一行，设置默认的 analyzer 为 ik：
-
-```yaml
-index.analysis.analyzer.default.type : "ik"
-```
-
-Install (new)
---------
-
 1.compile
 
 `mvn package`
@@ -134,6 +40,16 @@ copy and unzip `target/release/ik**.zip` to `your-es-root/plugins/ik`
 download the dict files,unzip these dict file into your elasticsearch's config folder,such as: `your-es-root/config/ik`
 
 3.restart elasticsearch
+
+如果要设置为默认analyzer：
+
+```yml
+index :
+  analysis :
+    analyzer :
+      default :
+        tokenizer : ik_max_word
+```
 
 Tips:
 
@@ -276,15 +192,15 @@ Result
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-	<comment>IK Analyzer 扩展配置</comment>
-	<!--用户可以在这里配置自己的扩展字典 -->
-	<entry key="ext_dict">custom/mydict.dic;custom/single_word_low_freq.dic</entry>
-	 <!--用户可以在这里配置自己的扩展停止词字典-->
-	<entry key="ext_stopwords">custom/ext_stopword.dic</entry>
- 	<!--用户可以在这里配置远程扩展字典 -->
-	<entry key="remote_ext_dict">location</entry>
- 	<!--用户可以在这里配置远程扩展停止词字典-->
-	<entry key="remote_ext_stopwords">http://xxx.com/xxx.dic</entry>
+    <comment>IK Analyzer 扩展配置</comment>
+    <!--用户可以在这里配置自己的扩展字典 -->
+    <entry key="ext_dict">custom/mydict.dic;custom/single_word_low_freq.dic</entry>
+     <!--用户可以在这里配置自己的扩展停止词字典-->
+    <entry key="ext_stopwords">custom/ext_stopword.dic</entry>
+    <!--用户可以在这里配置远程扩展字典 -->
+    <entry key="remote_ext_dict">location</entry>
+    <!--用户可以在这里配置远程扩展停止词字典-->
+    <entry key="remote_ext_stopwords">http://xxx.com/xxx.dic</entry>
 </properties>
 ```
 
